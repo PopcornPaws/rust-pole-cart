@@ -3,11 +3,12 @@ extern crate nalgebra as na;
 use na::{Vector2, Point2};
 use ncollide2d::pipeline::CollisionGroups;
 use ncollide2d::shape::{Cuboid, ShapeHandle};
-use nphysics2d::force_generator::DefaultForceGeneratorSet;
+use nphysics2d::force_generator::{DefaultForceGeneratorSet, ForceGenerator};
 use nphysics2d::joint::DefaultJointConstraintSet;
-use nphysics2d::joint::RevoluteConstraint;
-use nphysics2d::math::Velocity;
-use nphysics2d::object::{BodyPartHandle, BodyStatus, ColliderDesc, DefaultBodySet, DefaultColliderSet, Ground, RigidBodyDesc};
+use nphysics2d::joint::{PrismaticConstraint, RevoluteConstraint};
+use nphysics2d::math::{Force, ForceType, Velocity};
+use nphysics2d::object::{Body, BodyPartHandle, BodyStatus, ColliderDesc, DefaultBodySet, DefaultColliderSet, Ground, RigidBodyDesc};
+use nphysics2d::solver::IntegrationParameters;
 use nphysics2d::world::{DefaultMechanicalWorld, DefaultGeometricalWorld};
 
 use nphysics_testbed2d::Testbed;
@@ -35,19 +36,18 @@ pub fn init_world(testbed: &mut Testbed) {
 
     let ground_handle = bodies.insert(Ground::new());
     let co = ColliderDesc::new(ground_shape)
-        .translation(-Vector2::y() * 2.0)
+        .collision_groups(cart_group)
+        .translation(Vector2::y() * 2.0)
         .build(BodyPartHandle(ground_handle, 0));
 
     colliders.insert(co);
 
-    let rad = 0.2;
-
-    let cuboid = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-    let collider_desc = ColliderDesc::new(cuboid.clone()).density(1.0);
+    // For handling collisions, add a buffer zone
+    let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(0.2)));
+    let collider_desc = ColliderDesc::new(geom).density(1.0);
 
     // Cart body 
     let cart_body = RigidBodyDesc::new()
-        .status(BodyStatus::Kinematic)
         .velocity(Velocity::linear(2.0, 0.0))
         .build();
     let cart_handle = bodies.insert(cart_body);
@@ -70,6 +70,7 @@ pub fn init_world(testbed: &mut Testbed) {
         .build(BodyPartHandle(pole_handle, 0));
     colliders.insert(pole_collider);
 
+    // Add revolute constraint between cart and pole
     let revolute_constraint = RevoluteConstraint::new(
         BodyPartHandle(cart_handle, 0),
         BodyPartHandle(pole_handle, 0),
@@ -79,60 +80,66 @@ pub fn init_world(testbed: &mut Testbed) {
 
     joint_constraints.insert(revolute_constraint);
 
-    /*
-     * Setup a kinematic multibody.
-     */
-    //let joint = RevoluteJoint::new(0.0);
+    // TODO
+    // Add prismatic constraint to constrain the motion of the cart
+    //let constraint = PrismaticConstraint::new(
 
-    //let mut mb = MultibodyDesc::new(joint)
-    //    .body_shift(Vector2::x() * 2.0)
-    //    .parent_shift(Vector2::new(5.0, 2.0))
-    //    .build();
 
-    //mb.set_status(BodyStatus::Kinematic);
-    //mb.generalized_velocity_mut()[0] = -3.0;
+    // Add force on the cart as an input
+    //pub struct InputForce {
+    //    parts: Vec<BodyPartHandle>,
+    //    center: Point2<f32>
+    //}
 
-    //let mb_handle = bodies.insert(mb);
-    //let mb_collider = collider_desc.build(BodyPartHandle(mb_handle, 0));
-    //colliders.insert(mb_collider);
+    //impl InputForce {
+    //    pub fn new(center: Point2<f32>, parts: Vec<BodyPartHandle>) -> Self {
+    //        InputForce {
+    //            parts,
+    //            center,
+    //        }
+    //    }
 
-    /*
-     * Setup a motorized multibody.
-     */
-    //let mut joint = RevoluteJoint::new(0.0);
-    //joint.set_desired_angular_motor_velocity(-2.0);
-    //joint.set_max_angular_motor_torque(2.0);
-    //joint.enable_angular_motor();
+    //    pub fn add_body(&mut self, body: BodyPartHandle) {
+    //        self.pars.push(body)
+    //    }
+    //}
 
-    //let mb = MultibodyDesc::new(joint)
-    //    .body_shift(Vector2::x() * 2.0)
-    //    .parent_shift(Vector2::new(-4.0, 3.0))
-    //    .build();
-    //let mb_handle = bodies.insert(mb);
+    //impl ForceGenerator<f32> for InputForce {
+    //    fn apply(&mut self, _: &IntegrationParameters<f32>, bodies: &mut BodySet<f32>, magnitude: f32) -> bool {
+    //        for handle in &self.parts {
+    //            if let Some(body) = bodies.body_mut(handle.0) {
+    //                let part = body.part(handle.1).unwrap();
 
-    //let geom = ShapeHandle::new(Ball::new(2.0 * rad));
-    //let ball_collider_desc = ColliderDesc::new(geom).density(1.0);
-    //let mb_collider = ball_collider_desc.build(BodyPartHandle(mb_handle, 0));
-    //colliders.insert(mb_collider);
+    //                let force = Force::linear(magnitude);
+    //                body.apply_force(handle.1, &force, ForceType::Force, false);
+    //            }
+    //        }
+    //        true
+    //    }
+    //}
 
-    /*
-     * Setup a callback to control the platform.
-     */
+    // .add_callback( move | _, geometrical_world, bodies, colliders, graphics, _|
     testbed.add_callback(move |_, _, bodies, _, _, _| {
+        let force = Force::linear(Vector2::new(-250.0, 0.0));
         if let Some(platform) = bodies.rigid_body_mut(cart_handle) {
             let platform_x = platform.position().translation.vector.x;
 
             let mut vel = *platform.velocity();
 
-            if platform_x >= rad * 10.0 {
+            if platform_x >= 10.0 {
                 vel.linear.x = - vel.linear.x;
             }
-            if platform_x <= -rad * 10.0 {
+            if platform_x <= 10.0 {
                 vel.linear.x = - vel.linear.x;
             }
 
+            platform.apply_force(0, &force, ForceType::Force, false);
+
             platform.set_velocity(vel);
         }
+        //if let Some(rod) = bodies.rigid_body_mut(pole_handle) {
+        //    println!("{}", rod.velocity().angular);
+        //}
     });
 
     /*
@@ -152,5 +159,5 @@ pub fn init_world(testbed: &mut Testbed) {
 
 fn main() {
     let testbed = Testbed::from_builders(0, vec![("Kinematic body", init_world)]);
-    testbed.run()
+    testbed.run();
 }
