@@ -37,14 +37,14 @@ pub fn init_world(testbed: &mut Testbed) {
     let ground_handle = bodies.insert(Ground::new());
     let co = ColliderDesc::new(ground_shape)
         .collision_groups(cart_group)
-        .translation(Vector2::y() * 2.0)
+        .translation(Vector2::y() * -2.0)
         .build(BodyPartHandle(ground_handle, 0));
 
     colliders.insert(co);
 
     // For handling collisions, add a buffer zone
-    let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(0.2)));
-    let collider_desc = ColliderDesc::new(geom).density(1.0);
+    //let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(0.2)));
+    //let collider_desc = ColliderDesc::new(geom).density(1.0);
 
     // Cart body 
     let cart_body = RigidBodyDesc::new()
