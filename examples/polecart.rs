@@ -14,8 +14,16 @@ use nphysics2d::world::{DefaultMechanicalWorld, DefaultGeometricalWorld};
 use nphysics_testbed2d::Testbed;
 
 pub fn init_world(testbed: &mut Testbed) { 
+    // Initialize simulation parameters:
+    const G: f32 = -9.81; // Gravitational acceleration [m/s^2]
+    const M_C: f32 = 1.5; // Mass of cart body [kg]
+    const M_P: f32 = 1.0; // Mass of pole body [kg]
+    const L_P: f32 = 2.0; // Lenght of pole [m]
+    const J_P: f32 = M_P * L_P / 6.0; // m * l^2 / 12 /(l / 2) = J_p / (l / 2)
+    const K_P: f32 = 100.0; // Proportional gain
+    const K_D: f32 = 0.7; // Derivative gain
     // World
-    let mut mechanical_world = DefaultMechanicalWorld::new(Vector2::new(0.0, -9.81));
+    let mut mechanical_world = DefaultMechanicalWorld::new(Vector2::new(0.0, G));
     let mut geometrical_world = DefaultGeometricalWorld::new();
     let mut bodies = DefaultBodySet::new();
     let mut colliders = DefaultColliderSet::new();
@@ -45,11 +53,15 @@ pub fn init_world(testbed: &mut Testbed) {
     // For handling collisions, add a buffer zone
     //let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(0.2)));
     //let collider_desc = ColliderDesc::new(geom).density(1.0);
+    let cart_anchor = Point2::new(0.0, 0.5);
+    let pole_anchor = Point2::new(0.0, 2.0);
 
     // Cart body 
     let cart_body = RigidBodyDesc::new()
-        .velocity(Velocity::linear(2.0, 0.0))
+        .mass(2.0)
+        .translation(cart_anchor.coords)
         .build();
+        //.velocity(Velocity::linear(2.0, 0.0))
     let cart_handle = bodies.insert(cart_body);
     let cart_geom = ShapeHandle::new(Cuboid::new(Vector2::new(2.0, 1.0)));
     let cart_collider = ColliderDesc::new(cart_geom)
@@ -60,7 +72,8 @@ pub fn init_world(testbed: &mut Testbed) {
 
     // Pole body
     let pole_body = RigidBodyDesc::new()
-        .translation(Vector2::new(0.0, 2.0))
+        .mass(1.0)
+        .translation(pole_anchor.coords)
         .build();
     let pole_handle = bodies.insert(pole_body);
     let pole_geom = ShapeHandle::new(Cuboid::new(Vector2::new(0.1, 2.0)));
@@ -75,14 +88,19 @@ pub fn init_world(testbed: &mut Testbed) {
         BodyPartHandle(cart_handle, 0),
         BodyPartHandle(pole_handle, 0),
         Point2::new(0.0, 1.0),
-        Point2::new(0.0, -2.2),
+        Point2::new(0.0, -2.0),
     );
-
     joint_constraints.insert(revolute_constraint);
 
-    // TODO
-    // Add prismatic constraint to constrain the motion of the cart
-    //let constraint = PrismaticConstraint::new(
+    // Add prismatic joint between the ground and the cart body
+    let prismatic_constraint = PrismaticConstraint::new(
+        BodyPartHandle(ground_handle, 0), // parent (ground)
+        BodyPartHandle(cart_handle, 0), // child (cart)
+        cart_anchor,
+        Vector2::x_axis(),
+        Point2::origin(),
+    );
+    joint_constraints.insert(prismatic_constraint);
 
 
     // Add force on the cart as an input
@@ -118,28 +136,25 @@ pub fn init_world(testbed: &mut Testbed) {
     //    }
     //}
 
+    // DON'T DELETE THIS:
     // .add_callback( move | _, geometrical_world, bodies, colliders, graphics, _|
     testbed.add_callback(move |_, _, bodies, _, _, _| {
-        let force = Force::linear(Vector2::new(-250.0, 0.0));
-        if let Some(platform) = bodies.rigid_body_mut(cart_handle) {
-            let platform_x = platform.position().translation.vector.x;
+        let pole = bodies.rigid_body(pole_handle).unwrap();
+        let w = pole.velocity().angular;
+        let phi = pole.position().rotation.angle();
+        let mut input = 0.0;
 
-            let mut vel = *platform.velocity();
-
-            if platform_x >= 10.0 {
-                vel.linear.x = - vel.linear.x;
-            }
-            if platform_x <= 10.0 {
-                vel.linear.x = - vel.linear.x;
-            }
-
-            platform.apply_force(0, &force, ForceType::Force, false);
-
-            platform.set_velocity(vel);
+        if phi.abs() < 3.1 / 2.0 { 
+            let w_dot_ref = - K_D * w - K_P * phi; // w_ref = 0, phi_ref = 0
+            input = 5.0 * (J_P * w_dot_ref / phi.cos() + M_P * G * phi.tan());
         }
-        //if let Some(rod) = bodies.rigid_body_mut(pole_handle) {
-        //    println!("{}", rod.velocity().angular);
-        //}
+
+        let force = Force::linear(Vector2::new(input, 0.0));
+        let cart = bodies.rigid_body_mut(cart_handle).unwrap();
+        cart.apply_force(0, &force, ForceType::Force, false);
+
+        //println!("{}", rod.velocity().angular);
+        //println!("{}", 10.0 - rod.position().rotation.angle());
     });
 
     /*
