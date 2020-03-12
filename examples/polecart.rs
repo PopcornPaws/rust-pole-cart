@@ -3,12 +3,11 @@ extern crate nalgebra as na;
 use na::{Vector2, Point2};
 use ncollide2d::pipeline::CollisionGroups;
 use ncollide2d::shape::{Cuboid, ShapeHandle};
-use nphysics2d::force_generator::{DefaultForceGeneratorSet, ForceGenerator};
+use nphysics2d::force_generator::{DefaultForceGeneratorSet};
 use nphysics2d::joint::DefaultJointConstraintSet;
 use nphysics2d::joint::{PrismaticConstraint, RevoluteConstraint};
-use nphysics2d::math::{Force, ForceType, Velocity};
-use nphysics2d::object::{Body, BodyPartHandle, BodyStatus, ColliderDesc, DefaultBodySet, DefaultColliderSet, Ground, RigidBodyDesc};
-use nphysics2d::solver::IntegrationParameters;
+use nphysics2d::math::{Force, ForceType};
+use nphysics2d::object::{Body, BodyPartHandle, ColliderDesc, DefaultBodySet, DefaultColliderSet, Ground, RigidBodyDesc};
 use nphysics2d::world::{DefaultMechanicalWorld, DefaultGeometricalWorld};
 
 use nphysics_testbed2d::Testbed;
@@ -20,11 +19,12 @@ pub fn init_world(testbed: &mut Testbed) {
     const M_P: f32 = 1.0; // Mass of pole body [kg]
     const L_P: f32 = 2.0; // Lenght of pole [m]
     const J_P: f32 = M_P * L_P / 6.0; // m * l^2 / 12 /(l / 2) = J_p / (l / 2)
-    const K_P: f32 = 100.0; // Proportional gain
-    const K_D: f32 = 0.7; // Derivative gain
+    const ZETA: f32 = 0.7; // Derivative gain
+    const W_N_A: f32 = 100.0; // Proportional gain (angular)
+    const W_N_L: f32 = 10.0; // Proportional gain (angular)
     // World
-    let mut mechanical_world = DefaultMechanicalWorld::new(Vector2::new(0.0, G));
-    let mut geometrical_world = DefaultGeometricalWorld::new();
+    let mechanical_world = DefaultMechanicalWorld::new(Vector2::new(0.0, G));
+    let geometrical_world = DefaultGeometricalWorld::new();
     let mut bodies = DefaultBodySet::new();
     let mut colliders = DefaultColliderSet::new();
     let mut joint_constraints = DefaultJointConstraintSet::new();
@@ -103,63 +103,29 @@ pub fn init_world(testbed: &mut Testbed) {
     joint_constraints.insert(prismatic_constraint);
 
 
-    // Add force on the cart as an input
-    //pub struct InputForce {
-    //    parts: Vec<BodyPartHandle>,
-    //    center: Point2<f32>
-    //}
-
-    //impl InputForce {
-    //    pub fn new(center: Point2<f32>, parts: Vec<BodyPartHandle>) -> Self {
-    //        InputForce {
-    //            parts,
-    //            center,
-    //        }
-    //    }
-
-    //    pub fn add_body(&mut self, body: BodyPartHandle) {
-    //        self.pars.push(body)
-    //    }
-    //}
-
-    //impl ForceGenerator<f32> for InputForce {
-    //    fn apply(&mut self, _: &IntegrationParameters<f32>, bodies: &mut BodySet<f32>, magnitude: f32) -> bool {
-    //        for handle in &self.parts {
-    //            if let Some(body) = bodies.body_mut(handle.0) {
-    //                let part = body.part(handle.1).unwrap();
-
-    //                let force = Force::linear(magnitude);
-    //                body.apply_force(handle.1, &force, ForceType::Force, false);
-    //            }
-    //        }
-    //        true
-    //    }
-    //}
-
     // DON'T DELETE THIS:
     // .add_callback( move | _, geometrical_world, bodies, colliders, graphics, _|
     testbed.add_callback(move |_, _, bodies, _, _, _| {
         let pole = bodies.rigid_body(pole_handle).unwrap();
         let w = pole.velocity().angular;
         let phi = pole.position().rotation.angle();
-        let mut input = 0.0;
+        let mut pole_input = 0.0;
 
         if phi.abs() < 3.1 / 2.0 { 
-            let w_dot_ref = - K_D * w - K_P * phi; // w_ref = 0, phi_ref = 0
-            input = 5.0 * (J_P * w_dot_ref / phi.cos() + M_P * G * phi.tan());
+            let w_dot_ref = - 2.0 * ZETA * W_N_A * w - W_N_A.powi(2) * phi; // w_ref = 0, phi_ref = 0
+            pole_input = J_P * w_dot_ref / phi.cos() + M_P * G * phi.tan();
         }
 
-        let force = Force::linear(Vector2::new(input, 0.0));
         let cart = bodies.rigid_body_mut(cart_handle).unwrap();
-        cart.apply_force(0, &force, ForceType::Force, false);
+        let p = cart.position().translation.vector[0];
+        let v = cart.velocity().linear.data[0];
+        let cart_input = - 2.0 * ZETA * W_N_L * v - W_N_L.powi(2) * p;
 
-        //println!("{}", rod.velocity().angular);
-        //println!("{}", 10.0 - rod.position().rotation.angle());
+        let force = Force::linear(Vector2::new(- cart_input + pole_input, 0.0));
+        cart.apply_force(0, &force, ForceType::Force, false);
     });
 
-    /*
-     * Run the simulation.
-     */
+    // Run the simulation.
     testbed.set_ground_handle(Some(ground_handle));
     testbed.set_world(
         mechanical_world,
