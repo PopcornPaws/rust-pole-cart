@@ -19,9 +19,9 @@ pub fn init_world(testbed: &mut Testbed) {
     const M_P: f32 = 1.0; // Mass of pole body [kg]
     const L_P: f32 = 2.0; // Lenght of pole [m]
     const J_P: f32 = M_P * L_P / 6.0; // m * l^2 / 12 /(l / 2) = J_p / (l / 2)
-    const ZETA: f32 = 0.7; // Derivative gain
-    const W_N_A: f32 = 100.0; // Proportional gain (angular)
-    const W_N_L: f32 = 10.0; // Proportional gain (angular)
+    const ZETA: f32 = 0.7; // Damping coefficient
+    const W_N_A: f32 = 100.0; // natural frequency of angular dynamics
+    const W_N_L: f32 = 5.0; // natural frequency of linear dynamics
     // World
     let mechanical_world = DefaultMechanicalWorld::new(Vector2::new(0.0, G));
     let geometrical_world = DefaultGeometricalWorld::new();
@@ -119,7 +119,7 @@ pub fn init_world(testbed: &mut Testbed) {
         let cart = bodies.rigid_body_mut(cart_handle).unwrap();
         let p = cart.position().translation.vector[0];
         let v = cart.velocity().linear.data[0];
-        let cart_input = - 2.0 * ZETA * W_N_L * v - W_N_L.powi(2) * p;
+        let cart_input = M_C * (- 2.0 * ZETA * W_N_L * v - W_N_L.powi(2) * p);
 
         let force = Force::linear(Vector2::new(- cart_input + pole_input, 0.0));
         cart.apply_force(0, &force, ForceType::Force, false);
@@ -135,7 +135,7 @@ pub fn init_world(testbed: &mut Testbed) {
         joint_constraints,
         force_generators,
     );
-    testbed.look_at(Point2::new(0.0, 0.0), 50.0);
+    testbed.look_at(Point2::new(0.0, 0.0), 25.0);
 }
 
 fn main() {
