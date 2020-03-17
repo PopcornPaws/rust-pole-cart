@@ -58,7 +58,7 @@ pub fn init_world(testbed: &mut Testbed) {
 
     // Cart body 
     let cart_body = RigidBodyDesc::new()
-        .mass(2.0)
+        .mass(M_C)
         .translation(cart_anchor.coords)
         .build();
         //.velocity(Velocity::linear(2.0, 0.0))
@@ -72,11 +72,11 @@ pub fn init_world(testbed: &mut Testbed) {
 
     // Pole body
     let pole_body = RigidBodyDesc::new()
-        .mass(1.0)
+        .mass(M_P)
         .translation(pole_anchor.coords)
         .build();
     let pole_handle = bodies.insert(pole_body);
-    let pole_geom = ShapeHandle::new(Cuboid::new(Vector2::new(0.1, 2.0)));
+    let pole_geom = ShapeHandle::new(Cuboid::new(Vector2::new(0.1, L_P)));
     let pole_collider = ColliderDesc::new(pole_geom)
         .collision_groups(pole_group)
         .density(1.0)
