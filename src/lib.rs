@@ -103,14 +103,14 @@ pub struct State {
     pub pole_angular_velocity: f32,
 }
 
-pub struct Parameters {
-    pub pole_drag_coefficient: f32,
-    pub cart_drag_coefficient: f32,
-}
+// TODO add drag
+//pub struct Parameters {
+//    pub pole_drag_coefficient: f32,
+//    pub cart_drag_coefficient: f32,
+//}
 
-// returns cart position and pole angle
 impl State {
-    pub fn propagate_dynamics(&mut self, input_force: f32, dt: f32, params: &Parameters) {
+    pub fn propagate_dynamics(&mut self, input_force: f32, dt: f32) {
         let (sa, ca) = self.pole_angle.sin_cos();
         let denominator = INERTIA_ALL_MASS + POLE_MASS_LENGTH_2 * (CART_MASS + POLE_MASS * sa * sa);
 

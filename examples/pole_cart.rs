@@ -1,4 +1,4 @@
-use pole_cart::{KissScene, Parameters, State};
+use pole_cart::{KissScene, State};
 use std::time::Instant;
 
 fn main() {
@@ -10,14 +10,10 @@ fn main() {
         pole_angular_velocity: 0.0,
     };
 
-    let parameters = Parameters {
-        pole_drag_coefficient: 1e-2,
-        cart_drag_coefficient: 1e-2,
-    };
-
     let ms_per_frame: f32 = 17.0;
     let mut last_render_time = Instant::now();
     let mut last_dynamics_time = Instant::now();
+
     loop {
         let current_time = Instant::now();
         let delta_render = current_time.duration_since(last_render_time).as_millis() as f32;
@@ -25,7 +21,7 @@ fn main() {
         let delta_dynamics = current_time.duration_since(last_dynamics_time).as_millis() as f32;
         if delta_dynamics >= 1e-2 {
             last_dynamics_time = current_time;
-            state.propagate_dynamics(0.1, delta_dynamics / 1000.0, &parameters);
+            state.propagate_dynamics(0.1, delta_dynamics / 1000.0);
         } else if delta_render >= ms_per_frame {
             last_render_time = current_time;
             if !scene.render(&state) {
