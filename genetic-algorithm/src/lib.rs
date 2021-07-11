@@ -10,8 +10,8 @@ use chromosome::Chromosome;
 use individual::Individual;
 
 pub use crossover::{CrossoverMethod, UniformCrossover};
-pub use mutation::{MutationMethod, GaussianMutation};
-pub use selection::{SelectionMethod, RouletteWheelSelection};
+pub use mutation::{GaussianMutation, MutationMethod};
+pub use selection::{RouletteWheelSelection, SelectionMethod};
 
 use rand::RngCore;
 
@@ -40,17 +40,15 @@ where
         I: Individual,
     {
         assert!(!population.is_empty());
-        population
-            .iter()
-            .map(|individual| {
+        (0..population.len())
+            .map(|_| {
                 let parent_a = self.selection_method.select(rng, population).chromosome();
                 let parent_b = self.selection_method.select(rng, population).chromosome();
 
                 let mut child = self.crossover_method.crossover(rng, &parent_a, &parent_b);
 
                 self.mutation_method.mutate(rng, &mut child);
-                // TODO convert Chromosome back into Individual
-                todo!()
+                I::create(child)
             })
             .collect()
     }

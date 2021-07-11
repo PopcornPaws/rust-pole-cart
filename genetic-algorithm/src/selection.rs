@@ -1,6 +1,6 @@
 use super::Individual;
-use rand::RngCore;
 use rand::seq::SliceRandom;
+use rand::RngCore;
 
 pub trait SelectionMethod {
     fn select<'a, I>(&self, rng: &mut dyn RngCore, population: &'a [I]) -> &'a I
@@ -29,8 +29,8 @@ impl SelectionMethod for RouletteWheelSelection {
 
 #[cfg(test)]
 mod test {
-    use crate::Chromosome;
     use super::*;
+    use crate::Chromosome;
 
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng as Cc8;
@@ -53,6 +53,10 @@ mod test {
         }
 
         fn chromosome(&self) -> &Chromosome {
+            unimplemented!()
+        }
+
+        fn create(_chromosome: Chromosome) -> Self {
             unimplemented!()
         }
     }
