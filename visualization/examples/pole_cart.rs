@@ -1,4 +1,4 @@
-use pole_cart::{KissScene, State};
+use visualization::{KissScene, State};
 use std::time::Instant;
 
 fn main() {
