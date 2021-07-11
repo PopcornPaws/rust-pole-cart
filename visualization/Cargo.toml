@@ -1,0 +1,8 @@
+[package]
+name = "visualization"
+version = "0.0.0"
+authors = ["Mark Melczer"] 
+edition = "2018"
+
+[dependencies]
+kiss3d = "0.31.0"

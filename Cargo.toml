@@ -1,8 +1,11 @@
-[package]
-name = "pole-cart"
-version = "0.0.0"
-authors = ["Mark Melczer"] 
-edition = "2018"
+[workspace]
+members = [
+	"neural-net",
+	"visualization"
+]
 
-[dependencies]
-kiss3d = "0.31.0"
+[profile.dev]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
