@@ -2,6 +2,7 @@
 members = [
 	"genetic-algorithm",
 	"neural-net",
+	"simulation",
 	"visualization"
 ]
 

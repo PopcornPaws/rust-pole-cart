@@ -1,0 +1,8 @@
+[package]
+name = "simulation"
+version = "0.1.0"
+authors = ["Mark Melczer <melczer7@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+neural-net = { path = "../neural-net" }
