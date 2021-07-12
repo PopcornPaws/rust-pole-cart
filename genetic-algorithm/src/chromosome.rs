@@ -1,6 +1,7 @@
 use std::iter::{FromIterator, IntoIterator};
 use std::ops::Index;
 
+#[derive(Debug)]
 pub struct Chromosome {
     genes: Vec<f32>,
 }
@@ -40,6 +41,13 @@ impl IntoIterator for Chromosome {
 
     fn into_iter(self) -> Self::IntoIter {
         self.genes.into_iter()
+    }
+}
+
+#[cfg(test)]
+impl PartialEq for Chromosome {
+    fn eq(&self, other: &Self) -> bool {
+        approx::relative_eq!(self.genes.as_slice(), other.genes.as_slice())
     }
 }
 

@@ -30,36 +30,12 @@ impl SelectionMethod for RouletteWheelSelection {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::Chromosome;
+    use crate::TestIndividual;
 
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng as Cc8;
     use std::collections::BTreeMap;
     use std::iter::FromIterator;
-
-    struct TestIndividual {
-        fitness: f32,
-    }
-
-    impl TestIndividual {
-        fn new(fitness: f32) -> Self {
-            Self { fitness }
-        }
-    }
-
-    impl Individual for TestIndividual {
-        fn fitness(&self) -> f32 {
-            self.fitness
-        }
-
-        fn chromosome(&self) -> &Chromosome {
-            unimplemented!()
-        }
-
-        fn create(_chromosome: Chromosome) -> Self {
-            unimplemented!()
-        }
-    }
 
     #[test]
     fn roulette_wheel_selection() {
@@ -68,10 +44,10 @@ mod test {
         let mut actual_histogram = BTreeMap::new();
 
         let population = vec![
-            TestIndividual::new(2.0),
-            TestIndividual::new(1.0),
-            TestIndividual::new(4.0),
-            TestIndividual::new(3.0),
+            TestIndividual::new_with_fitness(2.0),
+            TestIndividual::new_with_fitness(1.0),
+            TestIndividual::new_with_fitness(4.0),
+            TestIndividual::new_with_fitness(3.0),
         ];
 
         for _ in 0..1000 {

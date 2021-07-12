@@ -22,7 +22,7 @@ impl GaussianMutation {
     }
 }
 
-impl GaussianMutation {
+impl MutationMethod for GaussianMutation {
     fn mutate(&self, rng: &mut dyn RngCore, child: &mut Chromosome) {
         for gene in child.iter_mut() {
             let sign = if rng.gen_bool(0.5) { -1.0 } else { 1.0 };
