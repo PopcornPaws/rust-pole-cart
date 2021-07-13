@@ -6,16 +6,13 @@ mod individual;
 mod mutation;
 mod selection;
 
-use chromosome::Chromosome;
-use individual::Individual;
-
 // export traits as well, in case someone wants to implement their own
 // algorithms externally
+pub use chromosome::Chromosome;
 pub use crossover::{CrossoverMethod, UniformCrossover};
+pub use individual::Individual;
 pub use mutation::{GaussianMutation, MutationMethod};
 pub use selection::{RouletteWheelSelection, SelectionMethod};
-
-use common::RngCore;
 
 pub struct GeneticAlgorithm<C, M, S> {
     crossover_method: C,
@@ -37,7 +34,7 @@ where
         }
     }
 
-    pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> Vec<I>
+    pub fn evolve<I>(&self, rng: &mut dyn common::RngCore, population: &[I]) -> Vec<I>
     where
         I: Individual,
     {

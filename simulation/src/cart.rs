@@ -1,12 +1,11 @@
+use genetic_algorithm::{Chromosome, Individual};
 use neural_net::{Network, NeuronsInLayer};
 
 const G: f32 = 9.81;
-
-#[derive(Clone, Copy, Default)]
-pub struct Parameters {
-    pub acc_max: f32,
-    pub drag_coeff: f32,
-}
+const ACC_MAX: f32 = 4.0;
+const DRAG_COEFF: f32 = 1e-2; // must be positive
+                              // 3 inputs are the 3 states, 1 output is the acceleration
+const TOPOLOGY: &[NeuronsInLayer] = &[NeuronsInLayer(3), NeuronsInLayer(6), NeuronsInLayer(1)];
 
 #[derive(Default)]
 struct State {
@@ -24,24 +23,14 @@ impl State {
 pub struct Cart {
     engine: Network,
     state: State,
-    parameters: Parameters,
     max_height_reached: f32, // fitness value
 }
 
 impl Cart {
-    pub fn random(
-        rng: &mut dyn common::RngCore,
-        topology: &[NeuronsInLayer],
-        parameters: Parameters,
-    ) -> Self {
-        assert_eq!(topology[0].0, 3); // 3 inputs are the states
-        assert_eq!(topology[topology.len() - 1].0, 1); // 1 output is the acceleration command
-        assert!(parameters.drag_coeff >= 0.0); // drag coefficient must be positive
-
+    pub fn random(rng: &mut dyn common::RngCore) -> Self {
         Self {
-            engine: Network::random(rng, topology),
+            engine: Network::random(rng, TOPOLOGY),
             state: State::default(),
-            parameters,
             max_height_reached: 0.0,
         }
     }
@@ -49,16 +38,13 @@ impl Cart {
     pub fn compute_input_acceleration(&self) -> f32 {
         let nn_output = self.engine.propagate(self.state.as_vec());
         // nn output should be a vec with a single element
-        nn_output[0]
-            .min(-self.parameters.acc_max)
-            .max(self.parameters.acc_max)
+        nn_output[0].min(ACC_MAX).max(-ACC_MAX)
     }
 
     pub fn propagate_dynamics(&mut self, input_acceleration: f32, dt: f32) {
         let (sin, cos) = (2.0 * self.state.pos_x).atan().sin_cos();
-        let acc = input_acceleration
-            - G * sin
-            - self.state.vel_x.abs() * self.state.vel_x * self.parameters.drag_coeff;
+        let acc =
+            input_acceleration - G * sin - self.state.vel_x.abs() * self.state.vel_x * DRAG_COEFF;
 
         self.state.pos_x += self.state.vel_x * dt;
         self.state.vel_x += acc * cos * dt; // cos: x direction only
@@ -66,6 +52,24 @@ impl Cart {
 
         // update "fitness" value
         self.max_height_reached = self.max_height_reached.max(self.state.pos_y);
+    }
+}
+
+impl Individual for Cart {
+    fn fitness(&self) -> f32 {
+        self.max_height_reached
+    }
+
+    fn chromosome(&self) -> &Chromosome {
+        Box::leak(Box::new(self.engine.weights().collect::<Chromosome>()))
+    }
+
+    fn create(chromosome: Chromosome) -> Self {
+        Self {
+            engine: Network::from_weights(TOPOLOGY, chromosome.into_iter()),
+            state: State::default(),
+            max_height_reached: 0.0,
+        }
     }
 }
 
@@ -78,11 +82,7 @@ mod test {
     #[test]
     fn equilibrium_at_45_deg_slope() {
         let mut rng = Cc8::from_seed(Default::default());
-        let mut cart = Cart::random(
-            &mut rng,
-            &[NeuronsInLayer(3), NeuronsInLayer(1)],
-            Parameters::default(),
-        );
+        let mut cart = Cart::random(&mut rng);
 
         cart.state.pos_x = 0.5;
 
@@ -100,14 +100,7 @@ mod test {
     #[test]
     fn propagate_random_dynamics() {
         let mut rng = Cc8::from_seed(Default::default());
-        let mut cart = Cart::random(
-            &mut rng,
-            &[NeuronsInLayer(3), NeuronsInLayer(6), NeuronsInLayer(1)],
-            Parameters {
-                acc_max: 4.0,
-                drag_coeff: 0.0,
-            },
-        );
+        let mut cart = Cart::random(&mut rng);
 
         for _ in 0..1000 {
             let input_acc = cart.compute_input_acceleration();
