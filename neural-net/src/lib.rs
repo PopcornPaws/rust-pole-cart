@@ -31,8 +31,8 @@ pub struct LayerTopology {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use super::neuron::Neuron;
+    use super::*;
 
     use approx::assert_relative_eq;
     use rand::SeedableRng;

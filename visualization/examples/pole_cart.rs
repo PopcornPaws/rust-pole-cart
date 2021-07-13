@@ -1,5 +1,5 @@
-use visualization::{KissScene, State};
 use std::time::Instant;
+use visualization::{KissScene, State};
 
 fn main() {
     let mut scene = KissScene::default();

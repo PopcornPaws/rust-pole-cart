@@ -5,7 +5,11 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn random(rng: &mut dyn rand::RngCore, input_neurons: usize, output_neurons: usize) -> Self {
+    pub fn random(
+        rng: &mut dyn rand::RngCore,
+        input_neurons: usize,
+        output_neurons: usize,
+    ) -> Self {
         let neurons = (0..output_neurons)
             .map(|_| Neuron::random(rng, input_neurons))
             .collect();
