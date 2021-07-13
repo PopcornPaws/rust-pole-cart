@@ -8,3 +8,6 @@ edition = "2018"
 common = { path = "../common" }
 genetic-algorithm = { path = "../genetic-algorithm" }
 neural-net = { path = "../neural-net" }
+
+[dev-dependencies]
+common = { path = "../common", features = ["dev"] }

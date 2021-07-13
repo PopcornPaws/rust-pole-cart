@@ -38,8 +38,6 @@ impl Neuron {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    use approx::assert_relative_eq;
     use common::*;
 
     #[test]

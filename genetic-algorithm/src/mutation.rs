@@ -56,7 +56,7 @@ mod test {
             fn does_not_change_the_original_chromosome() {
                 let actual = super::actual(0.0);
                 let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
 
@@ -65,7 +65,7 @@ mod test {
             fn does_not_change_the_original_chromosome() {
                 let actual = super::actual(0.5);
                 let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
     }
@@ -80,7 +80,7 @@ mod test {
             fn does_not_change_the_original_chromosome() {
                 let actual = super::actual(0.0);
                 let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
 
@@ -89,7 +89,7 @@ mod test {
             fn slightly_changes_the_original_chromosome() {
                 let actual = super::actual(0.5);
                 let expected = vec![1.0, 1.7756249, 3.0, 4.1596804, 5.0];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
     }
@@ -104,7 +104,7 @@ mod test {
             fn does_not_change_the_original_chromosome() {
                 let actual = super::actual(0.0);
                 let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
 
@@ -113,7 +113,7 @@ mod test {
             fn entirely_changes_the_original_chromosome() {
                 let actual = super::actual(0.5);
                 let expected = vec![1.4545316, 2.1162078, 2.7756248, 3.9505124, 4.638691];
-                approx::assert_relative_eq!(actual.as_slice(), expected.as_slice());
+                common::assert_relative_eq!(actual.as_slice(), expected.as_slice());
             }
         }
     }

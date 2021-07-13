@@ -8,5 +8,4 @@ edition = "2018"
 common = { path = "../common" }
 
 [dev-dependencies]
-approx = "0.4"
 common = { path = "../common", features = ["dev"]}

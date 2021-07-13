@@ -5,8 +5,9 @@ authors = ["Mark Melczer <melczer7@gmail.com>"]
 edition = "2018"
 
 [features]
-dev = ["rand_chacha"]
+dev = ["approx", "rand_chacha"]
 
 [dependencies]
+approx = { version = "0.4", optional = true }
 rand = "0.8"
 rand_chacha = { version = "0.3", optional = true }

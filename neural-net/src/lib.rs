@@ -59,8 +59,6 @@ pub struct NeuronsInLayer(pub usize);
 mod test {
     use super::neuron::Neuron;
     use super::*;
-
-    use approx::assert_relative_eq;
     use common::*;
 
     #[test]
