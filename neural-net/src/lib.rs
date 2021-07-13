@@ -8,12 +8,12 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn random(rng: &mut dyn rand::RngCore, layers: &[LayerTopology]) -> Self {
-        assert!(layers.len() > 1);
+    pub fn random(rng: &mut dyn rand::RngCore, topology: &[NeuronsInLayer]) -> Self {
+        assert!(topology.len() > 1);
 
-        let layers = layers
+        let layers = topology
             .windows(2)
-            .map(|layers| Layer::random(rng, layers[0].neurons, layers[1].neurons))
+            .map(|layers| Layer::random(rng, layers[0].0, layers[1].0))
             .collect();
         Self { layers }
     }
@@ -23,11 +23,42 @@ impl Network {
             .iter()
             .fold(inputs, |inputs, layer| layer.propagate(inputs))
     }
+
+    pub fn weights(&self) -> impl Iterator<Item = f32> + '_ {
+        self.layers
+            .iter()
+            .flat_map(|layer| layer.neurons.iter())
+            .flat_map(|neuron| std::iter::once(&neuron.bias).chain(&neuron.weights))
+            .cloned()
+    }
+
+    pub fn from_weights(
+        topology: &[NeuronsInLayer],
+        weights: impl IntoIterator<Item = f32>,
+    ) -> Self {
+        assert!(topology.len() > 1);
+
+        let mut weights = weights.into_iter();
+
+        let layers = topology
+            .windows(2)
+            .map(|layers| {
+                Layer::from_weights(
+                    layers[0].0,
+                    layers[1].0,
+                    &mut weights,
+                )}
+            ).collect();
+
+        if weights.next().is_some() {
+            panic!("got too many weights");
+        }
+
+        Self { layers }
+    }
 }
 
-pub struct LayerTopology {
-    pub neurons: usize,
-}
+pub struct NeuronsInLayer(pub usize);
 
 #[cfg(test)]
 mod test {
@@ -44,10 +75,10 @@ mod test {
         let network = Network::random(
             &mut rng,
             &[
-                LayerTopology { neurons: 5 },
-                LayerTopology { neurons: 4 },
-                LayerTopology { neurons: 3 },
-                LayerTopology { neurons: 2 },
+                NeuronsInLayer(5),
+                NeuronsInLayer(4),
+                NeuronsInLayer(3),
+                NeuronsInLayer(2),
             ],
         );
 
@@ -88,5 +119,45 @@ mod test {
 
         let output = network.propagate(vec![0.3, 0.2, -0.1]);
         assert_relative_eq!(output.as_slice(), [0.204].as_ref());
+    }
+
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn not_enough_layers() {
+        Network::from_weights(
+            &[
+                NeuronsInLayer(4),
+            ],
+            &mut vec![2.3_f32].into_iter()
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "got too many weights")]
+    fn too_many_weights() {
+        Network::from_weights(
+            &[
+                NeuronsInLayer(4),
+                NeuronsInLayer(3),
+                NeuronsInLayer(2),
+            ],
+            &mut vec![2.3_f32; 35].into_iter()
+        );
+    }
+
+    #[test]
+    fn successful_from_weights() {
+        let network = Network::from_weights(
+            &[
+                NeuronsInLayer(4),
+                NeuronsInLayer(3),
+                NeuronsInLayer(2),
+            ],
+            &mut vec![2.3_f32; 23].into_iter()
+        );
+
+        assert_eq!(network.layers.len(), 2);
+        assert_eq!(network.layers[0].neurons.len(), 3);
+        assert_eq!(network.layers[1].neurons.len(), 2);
     }
 }

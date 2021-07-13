@@ -22,6 +22,18 @@ impl Layer {
             .map(|neuron| neuron.propagate(&inputs))
             .collect()
     }
+
+    pub fn from_weights(
+        input_size: usize,
+        output_size: usize,
+        weights: &mut dyn Iterator<Item = f32>,
+    ) -> Self {
+        let neurons = (0..output_size)
+            .map(|_| Neuron::from_weights(input_size, weights))
+            .collect();
+
+        Self { neurons }
+    }
 }
 
 #[cfg(test)]
@@ -61,5 +73,16 @@ mod test {
 
         let output = layer.propagate(vec![0.3, 0.2, -0.1]);
         assert_relative_eq!(output.as_slice(), [0.54, 0.1].as_ref());
+    }
+
+    #[test]
+    fn successful_from_weights() {
+        let mut weights = vec![0.1_f32, -0.2, 0.3, -0.4, 0.5, 0.3, 0.2, 0.1].into_iter();
+
+        let layer = Layer::from_weights(3, 2, &mut weights);
+
+        assert_eq!(layer.neurons.len(), 2);
+        assert_relative_eq!(layer.neurons[0].bias, 0.1);
+        assert_relative_eq!(layer.neurons[1].bias, 0.5);
     }
 }
