@@ -42,13 +42,8 @@ impl Network {
 
         let layers = topology
             .windows(2)
-            .map(|layers| {
-                Layer::from_weights(
-                    layers[0].0,
-                    layers[1].0,
-                    &mut weights,
-                )}
-            ).collect();
+            .map(|layers| Layer::from_weights(layers[0].0, layers[1].0, &mut weights))
+            .collect();
 
         if weights.next().is_some() {
             panic!("got too many weights");
@@ -117,43 +112,37 @@ mod test {
             ],
         };
 
+        // check propagated output
         let output = network.propagate(vec![0.3, 0.2, -0.1]);
         assert_relative_eq!(output.as_slice(), [0.204].as_ref());
+
+        // check weights method as well
+        let weights = network.weights().collect::<Vec<f32>>();
+        assert_relative_eq!(weights.as_slice(),
+            [0.5_f32, 0.1, 0.2, 0.3, 0.1, -0.5, 0.5, -0.5, 0.7, -0.9, -0.1].as_ref()
+        );
     }
 
     #[test]
     #[should_panic(expected = "assertion failed")]
     fn not_enough_layers() {
-        Network::from_weights(
-            &[
-                NeuronsInLayer(4),
-            ],
-            &mut vec![2.3_f32].into_iter()
-        );
+        Network::from_weights(&[NeuronsInLayer(4)], &mut vec![2.3_f32].into_iter());
     }
 
     #[test]
     #[should_panic(expected = "got too many weights")]
     fn too_many_weights() {
         Network::from_weights(
-            &[
-                NeuronsInLayer(4),
-                NeuronsInLayer(3),
-                NeuronsInLayer(2),
-            ],
-            &mut vec![2.3_f32; 35].into_iter()
+            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
+            &mut vec![2.3_f32; 35].into_iter(),
         );
     }
 
     #[test]
     fn successful_from_weights() {
         let network = Network::from_weights(
-            &[
-                NeuronsInLayer(4),
-                NeuronsInLayer(3),
-                NeuronsInLayer(2),
-            ],
-            &mut vec![2.3_f32; 23].into_iter()
+            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
+            &mut vec![2.3_f32; 23].into_iter(),
         );
 
         assert_eq!(network.layers.len(), 2);
