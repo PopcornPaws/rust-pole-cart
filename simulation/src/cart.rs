@@ -56,20 +56,41 @@ impl Cart {
     }
 }
 
-impl Individual for Cart {
+pub struct CartIndividual {
+    fitness: f32,
+    chromosome: Chromosome,
+}
+
+impl CartIndividual {
+    pub fn from_cart(cart: &Cart) -> Self {
+        Self {
+            fitness: cart.max_height_reached,
+            chromosome: cart.engine.weights().collect(),
+        }
+    }
+
+    pub fn into_cart(self) -> Cart {
+        Cart {
+            engine: Network::from_weights(self.chromosome.into_iter(), TOPOLOGY),
+            state: State::default(),
+            max_height_reached: 0.0,
+        }
+    }
+}
+
+impl Individual for CartIndividual {
     fn fitness(&self) -> f32 {
-        self.max_height_reached
+        self.fitness
     }
 
     fn chromosome(&self) -> &Chromosome {
-        Box::leak(Box::new(self.engine.weights().collect::<Chromosome>()))
+        &self.chromosome
     }
 
     fn create(chromosome: Chromosome) -> Self {
         Self {
-            engine: Network::from_weights(TOPOLOGY, chromosome.into_iter()),
-            state: State::default(),
-            max_height_reached: 0.0,
+            fitness: 0.0,
+            chromosome,
         }
     }
 }
@@ -111,5 +132,23 @@ mod test {
         assert_relative_eq!(cart.state.pos_x, 0.09211952);
         assert_relative_eq!(cart.state.pos_y, 0.008486006);
         assert_relative_eq!(cart.state.vel_x, -0.027811058);
+    }
+
+    #[test]
+    fn convert_carts() {
+        let mut rng = Cc8::from_seed(Default::default());
+        let mut cart = Cart::random(&mut rng);
+
+        cart.max_height_reached = 2.0;
+
+        let cart_individual = CartIndividual::from_cart(&cart);
+        assert_relative_eq!(cart_individual.fitness(), 2.0);
+        let original_weights = cart.engine.weights().collect::<Vec<f32>>();
+        let expected_weights = cart_individual
+            .chromosome()
+            .iter()
+            .cloned()
+            .collect::<Vec<f32>>();
+        assert_relative_eq!(original_weights.as_slice(), expected_weights.as_slice());
     }
 }

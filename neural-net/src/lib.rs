@@ -33,8 +33,8 @@ impl Network {
     }
 
     pub fn from_weights(
-        topology: &[NeuronsInLayer],
         weights: impl IntoIterator<Item = f32>,
+        topology: &[NeuronsInLayer],
     ) -> Self {
         assert!(topology.len() > 1);
 
@@ -124,23 +124,23 @@ mod test {
     #[test]
     #[should_panic(expected = "assertion failed")]
     fn not_enough_layers() {
-        Network::from_weights(&[NeuronsInLayer(4)], &mut vec![2.3_f32].into_iter());
+        Network::from_weights(&mut vec![2.3_f32].into_iter(), &[NeuronsInLayer(4)]);
     }
 
     #[test]
     #[should_panic(expected = "got too many weights")]
     fn too_many_weights() {
         Network::from_weights(
-            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
             &mut vec![2.3_f32; 35].into_iter(),
+            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
         );
     }
 
     #[test]
     fn successful_from_weights() {
         let network = Network::from_weights(
-            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
             &mut vec![2.3_f32; 23].into_iter(),
+            &[NeuronsInLayer(4), NeuronsInLayer(3), NeuronsInLayer(2)],
         );
 
         assert_eq!(network.layers.len(), 2);
