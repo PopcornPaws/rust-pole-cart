@@ -2,22 +2,16 @@ use genetic_algorithm::{Chromosome, Individual};
 use neural_net::{Network, NeuronsInLayer};
 
 const G: f32 = 9.81;
-const ACC_MAX: f32 = 4.0;
+const ACC_MAX: f32 = 3.0;
 const DRAG_COEFF: f32 = 1e-2; // must be positive
-                              // 3 inputs are the 3 states, 1 output is the acceleration
-const TOPOLOGY: &[NeuronsInLayer] = &[NeuronsInLayer(3), NeuronsInLayer(6), NeuronsInLayer(1)];
+                              // 4 inputs are the 3 states and the height goal, 1 output is the acceleration
+const TOPOLOGY: &[NeuronsInLayer] = &[NeuronsInLayer(4), NeuronsInLayer(8), NeuronsInLayer(1)];
 
 #[derive(Default)]
 struct State {
     pos_x: f32,
     pos_y: f32,
     vel_x: f32,
-}
-
-impl State {
-    fn as_vec(&self) -> Vec<f32> {
-        vec![self.pos_x, self.pos_y, self.vel_x]
-    }
 }
 
 pub struct Cart {
@@ -35,8 +29,15 @@ impl Cart {
         }
     }
 
-    pub fn compute_input_acceleration(&self) -> f32 {
-        let nn_output = self.engine.propagate(self.state.as_vec());
+    pub fn compute_input_acceleration(&self, height_goal: f32) -> f32 {
+        let nn_input = vec![
+            self.state.pos_x,
+            self.state.pos_y,
+            self.state.vel_x,
+            height_goal,
+        ];
+
+        let nn_output = self.engine.propagate(nn_input);
         // nn output should be a vec with a single element
         nn_output[0].min(ACC_MAX).max(-ACC_MAX)
     }
@@ -103,12 +104,12 @@ mod test {
         let mut cart = Cart::random(&mut rng);
 
         for _ in 0..1000 {
-            let input_acc = cart.compute_input_acceleration();
+            let input_acc = cart.compute_input_acceleration(5.0);
             cart.propagate_dynamics(input_acc, 1e-2);
         }
 
-        assert_relative_eq!(cart.state.pos_x, -0.070806265);
-        assert_relative_eq!(cart.state.pos_y, 0.0050135273);
-        assert_relative_eq!(cart.state.vel_x, -0.88140285);
+        assert_relative_eq!(cart.state.pos_x, 0.09211952);
+        assert_relative_eq!(cart.state.pos_y, 0.008486006);
+        assert_relative_eq!(cart.state.vel_x, -0.027811058);
     }
 }

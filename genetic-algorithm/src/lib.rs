@@ -14,23 +14,23 @@ pub use individual::Individual;
 pub use mutation::{GaussianMutation, MutationMethod};
 pub use selection::{RouletteWheelSelection, SelectionMethod};
 
-pub struct GeneticAlgorithm<C, M, S> {
+pub struct GeneticAlgorithm<S, C, M> {
+    selection_method: S,
     crossover_method: C,
     mutation_method: M,
-    selection_method: S,
 }
 
-impl<C, M, S> GeneticAlgorithm<C, M, S>
+impl<S, C, M> GeneticAlgorithm<S, C, M>
 where
+    S: SelectionMethod,
     C: CrossoverMethod,
     M: MutationMethod,
-    S: SelectionMethod,
 {
-    pub fn new(crossover_method: C, mutation_method: M, selection_method: S) -> Self {
+    pub fn new(selection_method: S, crossover_method: C, mutation_method: M) -> Self {
         Self {
+            selection_method,
             crossover_method,
             mutation_method,
-            selection_method,
         }
     }
 
@@ -102,9 +102,9 @@ mod test {
     fn evolution() {
         let mut rng = Cc8::from_seed(Default::default());
         let ga = GeneticAlgorithm::new(
+            RouletteWheelSelection::new(),
             UniformCrossover::new(),
             GaussianMutation::new(0.5, 0.5),
-            RouletteWheelSelection::new(),
         );
 
         let mut population = vec![
