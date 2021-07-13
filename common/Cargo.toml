@@ -1,0 +1,12 @@
+[package]
+name = "common"
+version = "0.1.0"
+authors = ["Mark Melczer <melczer7@gmail.com>"]
+edition = "2018"
+
+[features]
+dev = ["rand_chacha"]
+
+[dependencies]
+rand = "0.8"
+rand_chacha = { version = "0.3", optional = true }

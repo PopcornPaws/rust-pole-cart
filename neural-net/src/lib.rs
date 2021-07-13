@@ -8,7 +8,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn random(rng: &mut dyn rand::RngCore, topology: &[NeuronsInLayer]) -> Self {
+    pub fn random(rng: &mut dyn common::RngCore, topology: &[NeuronsInLayer]) -> Self {
         assert!(topology.len() > 1);
 
         let layers = topology
@@ -61,8 +61,7 @@ mod test {
     use super::*;
 
     use approx::assert_relative_eq;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
+    use common::*;
 
     #[test]
     fn random_network() {
@@ -118,7 +117,8 @@ mod test {
 
         // check weights method as well
         let weights = network.weights().collect::<Vec<f32>>();
-        assert_relative_eq!(weights.as_slice(),
+        assert_relative_eq!(
+            weights.as_slice(),
             [0.5_f32, 0.1, 0.2, 0.3, 0.1, -0.5, 0.5, -0.5, 0.7, -0.9, -0.1].as_ref()
         );
     }

@@ -1,6 +1,6 @@
 use super::Individual;
-use rand::seq::SliceRandom;
-use rand::RngCore;
+
+use common::*;
 
 pub trait SelectionMethod {
     fn select<'a, I>(&self, rng: &mut dyn RngCore, population: &'a [I]) -> &'a I
@@ -32,8 +32,6 @@ mod test {
     use super::*;
     use crate::TestIndividual;
 
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
     use std::collections::BTreeMap;
     use std::iter::FromIterator;
 

@@ -1,6 +1,6 @@
 use super::Chromosome;
 
-use rand::{Rng, RngCore};
+use common::*;
 
 pub trait CrossoverMethod {
     fn crossover(
@@ -38,8 +38,6 @@ impl CrossoverMethod for UniformCrossover {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
 
     #[test]
     fn crossover() {

@@ -1,4 +1,4 @@
-use rand::Rng;
+use common::{Rng, RngCore};
 
 pub struct Neuron {
     pub bias: f32,
@@ -6,7 +6,7 @@ pub struct Neuron {
 }
 
 impl Neuron {
-    pub fn random(rng: &mut dyn rand::RngCore, output_size: usize) -> Self {
+    pub fn random(rng: &mut dyn RngCore, output_size: usize) -> Self {
         let bias = rng.gen_range(-1.0..=1.0);
         let weights = (0..output_size)
             .map(|_| rng.gen_range(-1.0..=1.0))
@@ -40,8 +40,7 @@ mod test {
     use super::*;
 
     use approx::assert_relative_eq;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
+    use common::*;
 
     #[test]
     fn random_neuron() {

@@ -1,5 +1,5 @@
 use super::Chromosome;
-use rand::{Rng, RngCore};
+use common::*;
 
 pub trait MutationMethod {
     fn mutate(&self, rng: &mut dyn RngCore, child: &mut Chromosome);
@@ -36,8 +36,6 @@ impl MutationMethod for GaussianMutation {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
 
     fn actual(chance: f32, coeff: f32) -> Vec<f32> {
         let mut child = vec![1.0, 2.0, 3.0, 4.0, 5.0].into_iter().collect();

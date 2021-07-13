@@ -5,8 +5,8 @@ authors = ["Mark Melczer <melczer7@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rand = "0.8"
+common = { path = "../common" }
 
 [dev-dependencies]
 approx = "0.4"
-rand_chacha = "0.3"
+common = { path = "../common", features = ["dev"] }

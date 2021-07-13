@@ -6,7 +6,7 @@ pub struct Layer {
 
 impl Layer {
     pub fn random(
-        rng: &mut dyn rand::RngCore,
+        rng: &mut dyn common::RngCore,
         input_neurons: usize,
         output_neurons: usize,
     ) -> Self {
@@ -41,8 +41,7 @@ mod test {
     use super::*;
 
     use approx::assert_relative_eq;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
+    use common::*;
 
     #[test]
     fn random_layer() {

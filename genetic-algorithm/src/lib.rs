@@ -9,11 +9,13 @@ mod selection;
 use chromosome::Chromosome;
 use individual::Individual;
 
+// export traits as well, in case someone wants to implement their own
+// algorithms externally
 pub use crossover::{CrossoverMethod, UniformCrossover};
 pub use mutation::{GaussianMutation, MutationMethod};
 pub use selection::{RouletteWheelSelection, SelectionMethod};
 
-use rand::RngCore;
+use common::RngCore;
 
 pub struct GeneticAlgorithm<C, M, S> {
     crossover_method: C,
@@ -92,8 +94,7 @@ impl Individual for TestIndividual {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng as Cc8;
+    use common::{Cc8, SeedableRng};
 
     fn individual(genes: &[f32]) -> TestIndividual {
         let chromosome = genes.iter().cloned().collect();
